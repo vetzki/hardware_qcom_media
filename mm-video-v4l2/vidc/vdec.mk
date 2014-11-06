@@ -1,6 +1,7 @@
 ifneq ($(BUILD_TINY_ANDROID),true)
 
 ROOT_DIR := $(call my-dir)
+OMX_VIDEO_PATH := $(ROOT_DIR)/..
 
 include $(CLEAR_VARS)
 LOCAL_PATH:= $(ROOT_DIR)
@@ -23,6 +24,7 @@ libOmxVdec-def += -DENABLE_DEBUG_HIGH
 libOmxVdec-def += -DENABLE_DEBUG_ERROR
 libOmxVdec-def += -UINPUT_BUFFER_LOG
 libOmxVdec-def += -UOUTPUT_BUFFER_LOG
+libOmxVdec-def += -Wno-parentheses
 ifeq ($(TARGET_BOARD_PLATFORM),msm8660)
 libOmxVdec-def += -DMAX_RES_1080P
 libOmxVdec-def += -DPROCESS_EXTRADATA_IN_OUTPUT_PORT
@@ -61,11 +63,12 @@ libOmxVdec-def += -DMAX_RES_1080P_EBI
 libOmxVdec-def += -DPROCESS_EXTRADATA_IN_OUTPUT_PORT
 libOmxVdec-def += -D_MSM8974_
 endif
-ifeq ($(TARGET_BOARD_PLATFORM),apq8084)
+ifeq ($(TARGET_BOARD_PLATFORM),msm8084)
 libOmxVdec-def += -DMAX_RES_1080P
 libOmxVdec-def += -DMAX_RES_1080P_EBI
 libOmxVdec-def += -DPROCESS_EXTRADATA_IN_OUTPUT_PORT
 libOmxVdec-def += -D_MSM8974_
+libOmxVdec-def += -D_ION_HEAP_MASK_COMPATIBILITY_WA
 endif
 ifeq ($(TARGET_BOARD_PLATFORM),mpq8092)
 libOmxVdec-def += -DMAX_RES_1080P
@@ -93,13 +96,12 @@ libmm-vdec-inc          += $(OMX_VIDEO_PATH)/vidc/common/inc
 libmm-vdec-inc          += hardware/qcom/media/mm-core/inc
 #DRM include - Interface which loads the DRM library
 libmm-vdec-inc	        += $(OMX_VIDEO_PATH)/DivxDrmDecrypt/inc
-libmm-vdec-inc          += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libgralloc
+libmm-vdec-inc          += $(TARGET_OUT_HEADERS)/qcom/display
+libmm-vdec-inc          += $(TARGET_OUT_HEADERS)/adreno
 libmm-vdec-inc          += frameworks/native/include/media/openmax
 libmm-vdec-inc          += frameworks/native/include/media/hardware
 libmm-vdec-inc          += $(vdec-inc)
-libmm-vdec-inc          += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libqdutils
 libmm-vdec-inc      += hardware/qcom/media/libc2dcolorconvert
-libmm-vdec-inc      += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libcopybit
 libmm-vdec-inc      += frameworks/av/include/media/stagefright
 
 
@@ -118,11 +120,12 @@ LOCAL_SRC_FILES         := vdec/src/frameparser.cpp
 LOCAL_SRC_FILES         += vdec/src/h264_utils.cpp
 LOCAL_SRC_FILES         += vdec/src/ts_parser.cpp
 LOCAL_SRC_FILES         += vdec/src/mp4_utils.cpp
-ifneq ($(filter msm8974 msm8610 msm8226 apq8084 mpq8092,$(TARGET_BOARD_PLATFORM)),)
+LOCAL_SRC_FILES         += vdec/src/hevc_utils.cpp
+ifneq ($(filter msm8974 msm8610 msm8226 msm8084 mpq8092,$(TARGET_BOARD_PLATFORM)),)
 LOCAL_SRC_FILES         += vdec/src/omx_vdec_msm8974.cpp
 else
 LOCAL_SHARED_LIBRARIES  += libhardware
-libmm-vdec-inc          += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libhwcomposer
+libmm-vdec-inc          += $(TARGET_OUT_HEADERS)/qcom/display
 LOCAL_SRC_FILES         += vdec/src/power_module.cpp
 LOCAL_SRC_FILES         += vdec/src/omx_vdec.cpp
 endif
@@ -140,7 +143,7 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_PATH:= $(ROOT_DIR)
 
-ifneq ($(filter msm8974 msm8610 apq8084 mpq8092,$(TARGET_BOARD_PLATFORM)),)
+ifneq ($(filter msm8974 msm8610 msm8084 mpq8092,$(TARGET_BOARD_PLATFORM)),)
 
 LOCAL_MODULE                    := libOmxVdecHevc
 LOCAL_MODULE_TAGS               := optional
@@ -164,7 +167,7 @@ LOCAL_SRC_FILES         += vdec/src/hevc_utils.cpp
 LOCAL_SRC_FILES         += common/src/extra_data_handler.cpp
 LOCAL_SRC_FILES         += common/src/vidc_color_converter.cpp
 
-include $(BUILD_SHARED_LIBRARY)
+#include $(BUILD_SHARED_LIBRARY)
 
 endif
 
@@ -188,7 +191,7 @@ LOCAL_SHARED_LIBRARIES    := libutils libOmxCore libOmxVdec libbinder libcutils
 LOCAL_SRC_FILES           := vdec/src/queue.c
 LOCAL_SRC_FILES           += vdec/test/omx_vdec_test.cpp
 
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
 
 # ---------------------------------------------------------------------------------
 # 			Make the driver-test (mm-video-driver-test)
@@ -208,7 +211,7 @@ LOCAL_PRELINK_MODULE            := false
 LOCAL_SRC_FILES                 := vdec/src/message_queue.c
 LOCAL_SRC_FILES                 += vdec/test/decoder_driver_test.c
 
-include $(BUILD_EXECUTABLE)
+#include $(BUILD_EXECUTABLE)
 
 endif #BUILD_TINY_ANDROID
 

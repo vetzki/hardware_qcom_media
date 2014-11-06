@@ -50,11 +50,12 @@ ifeq ($(TARGET_BOARD_PLATFORM),msm8226)
 libmm-venc-def += -DMAX_RES_1080P
 libmm-venc-def += -D_MSM8974_
 endif
-ifeq ($(TARGET_BOARD_PLATFORM),apq8084)
+ifeq ($(TARGET_BOARD_PLATFORM),msm8084)
 libmm-venc-def += -DMAX_RES_1080P
 libmm-venc-def += -DMAX_RES_1080P_EBI
 libOmxVdec-def += -DPROCESS_EXTRADATA_IN_OUTPUT_PORT
 libmm-venc-def += -D_MSM8974_
+libmm-venc-def += -D_ION_HEAP_MASK_COMPATIBILITY_WA
 endif
 ifeq ($(TARGET_BOARD_PLATFORM),mpq8092)
 libmm-venc-def += -DMAX_RES_1080P
@@ -80,11 +81,11 @@ libmm-venc-inc      += $(LOCAL_PATH)/venc/inc
 libmm-venc-inc      += $(OMX_VIDEO_PATH)/vidc/common/inc
 libmm-venc-inc      += hardware/qcom/media/mm-core/inc
 libmm-venc-inc      += hardware/qcom/media/libstagefrighthw
-libmm-venc-inc      += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libgralloc
+libmm-venc-inc      += $(TARGET_OUT_HEADERS)/qcom/display
+libmm-venc-inc      += $(TARGET_OUT_HEADERS)/adreno
 libmm-venc-inc      += frameworks/native/include/media/hardware
 libmm-venc-inc      += frameworks/native/include/media/openmax
 libmm-venc-inc      += hardware/qcom/media/libc2dcolorconvert
-libmm-venc-inc      += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libcopybit
 libmm-venc-inc      += frameworks/av/include/media/stagefright
 libmm-venc-inc      += frameworks/av/include/media/hardware
 libmm-venc-inc      += $(venc-inc)
@@ -96,11 +97,11 @@ LOCAL_C_INCLUDES                := $(libmm-venc-inc)
 
 LOCAL_PRELINK_MODULE      := false
 LOCAL_SHARED_LIBRARIES    := liblog libutils libbinder libcutils \
-                             libc2dcolorconvert libdl
+                             libc2dcolorconvert libdl libgui
 
 LOCAL_SRC_FILES   := venc/src/omx_video_base.cpp
 LOCAL_SRC_FILES   += venc/src/omx_video_encoder.cpp
-ifneq ($(filter msm8974 msm8610 msm8226 apq8084 mpq8092,$(TARGET_BOARD_PLATFORM)),)
+ifneq ($(filter msm8974 msm8610 msm8226 msm8084 mpq8092,$(TARGET_BOARD_PLATFORM)),)
 LOCAL_SRC_FILES   += venc/src/video_encoder_device_v4l2.cpp
 else
 LOCAL_SRC_FILES   += venc/src/video_encoder_device.cpp
@@ -109,55 +110,6 @@ endif
 LOCAL_SRC_FILES   += common/src/extra_data_handler.cpp
 
 include $(BUILD_SHARED_LIBRARY)
-
-# -----------------------------------------------------------------------------
-#  #                       Make the apps-test (mm-venc-omx-test720p)
-# -----------------------------------------------------------------------------
-
-include $(CLEAR_VARS)
-
-mm-venc-test720p-inc            := $(TARGET_OUT_HEADERS)/mm-core
-mm-venc-test720p-inc            += $(LOCAL_PATH)/venc/inc
-mm-venc-test720p-inc            += $(OMX_VIDEO_PATH)/vidc/common/inc
-mm-venc-test720p-inc            += hardware/qcom/media/mm-core/inc
-mm-venc-test720p-inc            += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libgralloc
-mm-venc-test720p-inc            += $(venc-inc)
-
-LOCAL_MODULE                    := mm-venc-omx-test720p
-LOCAL_MODULE_TAGS               := optional
-LOCAL_CFLAGS                    := $(libmm-venc-def)
-LOCAL_C_INCLUDES                := $(mm-venc-test720p-inc)
-LOCAL_PRELINK_MODULE            := false
-LOCAL_SHARED_LIBRARIES          := libmm-omxcore libOmxVenc libbinder liblog
-
-LOCAL_SRC_FILES                 := venc/test/venc_test.cpp
-LOCAL_SRC_FILES                 += venc/test/camera_test.cpp
-LOCAL_SRC_FILES                 += venc/test/venc_util.c
-LOCAL_SRC_FILES                 += venc/test/fb_test.c
-
-include $(BUILD_EXECUTABLE)
-
-# -----------------------------------------------------------------------------
-# 			Make the apps-test (mm-video-driver-test)
-# -----------------------------------------------------------------------------
-
-include $(CLEAR_VARS)
-
-venc-test-inc                   += $(LOCAL_PATH)/venc/inc
-venc-test-inc                   += hardware/qcom/display/$(TARGET_BOARD_PLATFORM)/libgralloc
-venc-test-inc                   += $(venc-inc)
-
-LOCAL_MODULE                    := mm-video-encdrv-test
-LOCAL_MODULE_TAGS               := optional
-LOCAL_C_INCLUDES                := $(venc-test-inc)
-LOCAL_C_INCLUDES                += hardware/qcom/media/mm-core/inc
-
-LOCAL_PRELINK_MODULE            := false
-
-LOCAL_SRC_FILES                 := venc/test/video_encoder_test.c
-LOCAL_SRC_FILES                 += venc/test/queue.c
-
-include $(BUILD_EXECUTABLE)
 
 endif #BUILD_TINY_ANDROID
 
